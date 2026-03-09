@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShopBill Pro — Billing & Sales Management</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fdf6ff;
+    --surface: #f3e8ff;
+    --card: #ffffff;
+    --border: #e9d5ff;
+    --accent: #9333ea;
+    --accent2: #f472b6;
+    --green: #10b981;
+    --red: #f43f5e;
+    --blue: #38bdf8;
+    --text: #3b1f5e;
+    --muted: #a78bca;
+    --font-head: 'Syne', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: linear-gradient(135deg, #fdf6ff 0%, #fce7f3 35%, #e0f7fa 65%, #f0fdf4 100%); background-attachment: fixed; color: var(--text); font-family: var(--font-mono); min-height: 100vh; overflow-x: hidden; }
+  header { display: flex; align-items: center; justify-content: space-between; padding: 18px 32px; background: linear-gradient(90deg, #f3e8ff, #fce7f3); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(147,51,234,0.08); }
+  .logo { font-family: var(--font-head); font-size: 1.4rem; font-weight: 800; letter-spacing: -0.5px; }
+  .logo span { color: var(--accent); }
+  .header-stats { display: flex; gap: 24px; }
+  .hstat { text-align: center; }
+  .hstat .val { font-family: var(--font-head); font-weight: 700; font-size: 1.1rem; color: var(--accent); }
+  .hstat .lbl { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .nav-tabs { display: flex; gap: 4px; background: linear-gradient(90deg, #fdf6ff, #fce7f3); border-bottom: 1px solid var(--border); padding: 0 32px; }
+  .tab-btn { padding: 12px 22px; background: none; border: none; color: var(--muted); font-family: var(--font-head); font-weight: 600; font-size: 0.85rem; cursor: pointer; letter-spacing: 0.5px; border-bottom: 2px solid transparent; transition: all 0.2s; text-transform: uppercase; }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .main { display: none; padding: 28px 32px; animation: fadeIn 0.3s ease; }
+  .main.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .billing-grid { display: grid; grid-template-columns: 1fr 380px; gap: 24px; }
+  .section-title { font-family: var(--font-head); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); margin-bottom: 14px; }
+  .card { background: rgba(255,255,255,0.85); backdrop-filter: blur(8px); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 16px rgba(147,51,234,0.06); }
+  .input-row { display: flex; gap: 10px; align-items: flex-end; }
+  .field { flex: 1; }
+  label { display: block; font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  input, select { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: var(--text); font-family: var(--font-mono); font-size: 0.85rem; outline: none; transition: border-color 0.2s; }
+  input:focus, select:focus { border-color: var(--accent); }
+  select option { background: #ffffff; color: #3b1f5e; }
+  .btn { padding: 10px 20px; border: none; border-radius: 8px; font-family: var(--font-head); font-weight: 700; font-size: 0.8rem; cursor: pointer; letter-spacing: 0.5px; transition: all 0.15s; text-transform: uppercase; }
+  .btn-accent { background: var(--accent); color: #000; }
+  .btn-accent:hover { background: #7c3aed; transform: translateY(-1px); }
+  .btn-green { background: var(--green); color: #000; }
+  .btn-green:hover { background: #05c090; }
+  .btn-red { background: var(--red); color: #fff; }
+  .btn-red:hover { background: #d93d5a; }
+  .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+  .cart-table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  th { text-align: left; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  td { padding: 10px 12px; border-bottom: 1px solid rgba(37,43,59,0.5); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(240,180,41,0.03); }
+  .qty-ctrl { display: flex; align-items: center; gap: 6px; }
+  .qty-btn { width: 24px; height: 24px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; transition: all 0.15s; }
+  .qty-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .del-btn { background: none; border: none; color: var(--red); cursor: pointer; font-size: 1rem; opacity: 0.6; transition: opacity 0.15s; }
+  .del-btn:hover { opacity: 1; }
+  .bill-summary { position: sticky; top: 80px; }
+  .summary-rows { margin: 12px 0; }
+  .s-row { display: flex; justify-content: space-between; padding: 7px 0; font-size: 0.83rem; border-bottom: 1px solid rgba(37,43,59,0.4); }
+  .s-row:last-child { border: none; }
+  .s-row .lbl { color: var(--muted); }
+  .s-row.total { font-family: var(--font-head); font-weight: 700; font-size: 1.1rem; color: var(--accent); }
+  .discount-row { display: flex; gap: 8px; margin: 10px 0; }
+  .payment-methods { display: flex; gap: 8px; margin: 12px 0; }
+  .pay-btn { flex: 1; padding: 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--muted); cursor: pointer; font-family: var(--font-mono); font-size: 0.75rem; transition: all 0.15s; text-align: center; }
+  .pay-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(139,92,246,0.12); }
+  .pay-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .cust-info { display: flex; gap: 10px; }
+  .inv-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .search-box { display: flex; gap: 10px; align-items: center; }
+  .search-box input { width: 260px; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.5px; }
+  .badge-green { background: #d1fae5; color: #059669; }
+  .badge-yellow { background: #ede9fe; color: #7c3aed; }
+  .badge-red { background: #fee2e2; color: #dc2626; }
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; position: relative; overflow: hidden; }
+  .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: #a78bfa; }
+  .stat-card.green::before { background: linear-gradient(90deg, #6ee7b7, #34d399); }
+  .stat-card.blue::before { background: linear-gradient(90deg, #7dd3fc, #38bdf8); }
+  .stat-card.red::before { background: linear-gradient(90deg, #fca5a5, #f87171); }
+  .stat-icon { font-size: 1.4rem; margin-bottom: 8px; }
+  .stat-val { font-family: var(--font-head); font-size: 1.8rem; font-weight: 800; line-height: 1; }
+  .stat-lbl { font-size: 0.7rem; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
+  .chart-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .bars { display: flex; align-items: flex-end; gap: 8px; height: 140px; padding-top: 10px; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .bar { width: 100%; background: linear-gradient(180deg, #a78bfa, rgba(167,139,250,0.25)); border-radius: 4px 4px 0 0; transition: height 0.5s ease; min-height: 4px; cursor: pointer; position: relative; }
+  .bar:hover { filter: brightness(1.2); }
+  .bar .tip { position: absolute; top: -28px; left: 50%; transform: translateX(-50%); background: #4c3d8f; color: #fff; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.15s; }
+  .bar:hover .tip { opacity: 1; }
+  .bar-lbl { font-size: 0.65rem; color: var(--muted); }
+  .txn-row { display: flex; align-items: center; justify-content: space-between; padding: 12px; border-radius: 8px; margin-bottom: 6px; background: var(--surface); border: 1px solid var(--border); transition: border-color 0.15s; }
+  .txn-row:hover { border-color: rgba(139,92,246,0.4); }
+  .txn-id { font-size: 0.75rem; color: var(--muted); }
+  .txn-name { font-family: var(--font-head); font-weight: 600; }
+  .txn-amount { font-family: var(--font-head); font-weight: 700; color: var(--green); }
+  .txn-date { font-size: 0.7rem; color: var(--muted); }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(100,80,160,0.35); z-index: 200; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+  .modal-overlay.open { display: flex; }
+  .modal { background: linear-gradient(135deg, #ffffff, #fdf4ff); border: 1px solid var(--border); border-radius: 16px; padding: 28px; width: 480px; max-width: 95vw; animation: popIn 0.25s ease; box-shadow: 0 20px 60px rgba(147,51,234,0.15); }
+  @keyframes popIn { from { transform: scale(0.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .modal-title { font-family: var(--font-head); font-size: 1.2rem; font-weight: 800; margin-bottom: 20px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+  .receipt { font-family: var(--font-mono); font-size: 0.8rem; line-height: 1.8; border: 1px dashed var(--border); border-radius: 8px; padding: 16px; background: #f0ebfa; }
+  .receipt-divider { border: none; border-top: 1px dashed var(--border); margin: 8px 0; }
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--card); border: 1px solid var(--border); border-left: 3px solid #34c97e; border-radius: 10px; padding: 12px 20px; font-size: 0.83rem; z-index: 300; transform: translateX(200%); transition: transform 0.3s ease; }
+  .toast.show { transform: translateX(0); }
+  .toast.error { border-left-color: var(--red); }
+  .empty { text-align: center; padding: 48px; color: var(--muted); font-size: 0.85rem; }
+  .empty .icon { font-size: 2.5rem; margin-bottom: 10px; }
+  @media (max-width: 900px) { .billing-grid { grid-template-columns: 1fr; } .stats-grid { grid-template-columns: repeat(2, 1fr); } header { flex-direction: column; gap: 10px; } .main { padding: 16px; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Shop<span>Bill</span> Pro</div>
+  <div class="header-stats">
+    <div class="hstat"><div class="val" id="hdr-sales">₹0</div><div class="lbl">Today's Sales</div></div>
+    <div class="hstat"><div class="val" id="hdr-bills">0</div><div class="lbl">Bills Today</div></div>
+    <div class="hstat"><div class="val" id="hdr-items">0</div><div class="lbl">Items in Stock</div></div>
+  </div>
+</header>
+
+<nav class="nav-tabs">
+  <button class="tab-btn active" onclick="switchTab('billing',this)">🧾 New Bill</button>
+  <button class="tab-btn" onclick="switchTab('inventory',this)">📦 Inventory</button>
+  <button class="tab-btn" onclick="switchTab('sales',this)">📊 Sales Report</button>
+</nav>
+
+<!-- BILLING TAB -->
+<div id="tab-billing" class="main active">
+  <div class="billing-grid">
+    <div>
+      <div class="card">
+        <div class="section-title">Customer Details</div>
+        <div class="cust-info">
+          <div class="field"><label>Customer Name</label><input type="text" id="cust-name" placeholder="Walk-in Customer"></div>
+          <div class="field"><label>Phone</label><input type="text" id="cust-phone" placeholder="Optional"></div>
+          <div class="field"><label>Bill #</label><input type="text" id="bill-no" readonly></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">Add Product to Bill</div>
+        <div class="input-row">
+          <div class="field"><label>Select Product</label><select id="prod-select"><option value="">-- Choose Product --</option></select></div>
+          <div class="field" style="max-width:90px"><label>Qty</label><input type="number" id="prod-qty" value="1" min="1"></div>
+          <button class="btn btn-accent" onclick="addToCart()">+ Add</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">Cart Items</div>
+        <div class="cart-table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Product</th><th>Price</th><th>Qty</th><th>Total</th><th></th></tr></thead>
+            <tbody id="cart-body"><tr><td colspan="6"><div class="empty"><div class="icon">🛒</div>Cart is empty. Add products above.</div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="bill-summary">
+      <div class="card">
+        <div class="section-title">Bill Summary</div>
+        <div class="summary-rows">
+          <div class="s-row"><span class="lbl">Subtotal</span><span id="s-subtotal">₹0.00</span></div>
+          <div class="s-row"><span class="lbl">Discount</span><span id="s-discount" style="color:var(--green)">-₹0.00</span></div>
+          <div class="s-row"><span class="lbl">GST (18%)</span><span id="s-tax">₹0.00</span></div>
+          <div class="s-row total"><span>Total</span><span id="s-total">₹0.00</span></div>
+        </div>
+        <div class="discount-row">
+          <div class="field"><label>Discount (%)</label><input type="number" id="disc-pct" placeholder="0" min="0" max="100" oninput="calcBill()"></div>
+          <div class="field"><label>Extra Discount (₹)</label><input type="number" id="disc-amt" placeholder="0" min="0" oninput="calcBill()"></div>
+        </div>
+        <div class="section-title" style="margin-top:14px">Payment Method</div>
+        <div class="payment-methods">
+          <div class="pay-btn active" onclick="selectPay(this,'Cash')">💵 Cash</div>
+          <div class="pay-btn" onclick="selectPay(this,'Card')">💳 Card</div>
+          <div class="pay-btn" onclick="selectPay(this,'UPI')">📱 UPI</div>
+        </div>
+        <div id="cash-section">
+          <label>Amount Received (₹)</label>
+          <input type="number" id="cash-received" placeholder="0" oninput="calcChange()">
+          <div class="s-row" style="margin-top:8px"><span class="lbl">Change</span><span id="s-change" style="color:var(--accent)">₹0.00</span></div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:16px">
+          <button class="btn btn-green" style="flex:1" onclick="generateBill()">✅ Generate Bill</button>
+          <button class="btn btn-outline" onclick="clearCart()">🗑 Clear</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- INVENTORY TAB -->
+<div id="tab-inventory" class="main">
+  <div class="inv-top">
+    <div class="search-box">
+      <div class="section-title" style="margin:0">Product Inventory</div>
+      <input type="text" id="inv-search" placeholder="Search products..." oninput="renderInventory()" style="width:220px">
+    </div>
+    <button class="btn btn-accent" onclick="openModal('modal-add-product')">+ Add Product</button>
+  </div>
+  <div class="card" style="padding:0">
+    <table>
+      <thead><tr><th>ID</th><th>Product Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody id="inv-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- SALES REPORT TAB -->
+<div id="tab-sales" class="main">
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-val" id="rpt-revenue">₹0</div><div class="stat-lbl">Total Revenue</div></div>
+    <div class="stat-card green"><div class="stat-icon">🧾</div><div class="stat-val" id="rpt-bills">0</div><div class="stat-lbl">Total Bills</div></div>
+    <div class="stat-card blue"><div class="stat-icon">📦</div><div class="stat-val" id="rpt-items-sold">0</div><div class="stat-lbl">Items Sold</div></div>
+    <div class="stat-card red"><div class="stat-icon">⭐</div><div class="stat-val" id="rpt-avg">₹0</div><div class="stat-lbl">Avg. Bill Value</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+    <div class="chart-wrap">
+      <div class="section-title">Stock Value by Category</div>
+      <div class="bars" id="sales-chart"></div>
+    </div>
+    <div class="chart-wrap">
+      <div class="section-title">Recent Transactions</div>
+      <div id="txn-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD PRODUCT MODAL -->
+<div class="modal-overlay" id="modal-add-product">
+  <div class="modal">
+    <div class="modal-title">Add New Product</div>
+    <div style="display:grid;gap:12px">
+      <div class="input-row">
+        <div class="field"><label>Product Name *</label><input type="text" id="np-name" placeholder="e.g. Milk 500ml"></div>
+        <div class="field"><label>Category *</label><select id="np-cat"><option>Grocery</option><option>Dairy</option><option>Chips</option><option>Snacks</option><option>Vegetables</option><option>Fruits</option><option>Juices</option><option>Beverages</option><option>Masala</option><option>Personal Care</option><option>Electronics</option><option>Other</option></select></div>
+      </div>
+      <div class="input-row">
+        <div class="field"><label>Price (₹) *</label><input type="number" id="np-price" placeholder="0.00" min="0"></div>
+        <div class="field"><label>Initial Stock *</label><input type="number" id="np-stock" placeholder="0" min="0"></div>
+        <div class="field"><label>Low Stock Alert</label><input type="number" id="np-low" placeholder="10" min="0"></div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-add-product')">Cancel</button>
+      <button class="btn btn-accent" onclick="saveProduct()">Save Product</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT PRODUCT MODAL -->
+<div class="modal-overlay" id="modal-edit-product">
+  <div class="modal">
+    <div class="modal-title">Edit Product</div>
+    <input type="hidden" id="ep-id">
+    <div style="display:grid;gap:12px">
+      <div class="input-row">
+        <div class="field"><label>Product Name</label><input type="text" id="ep-name"></div>
+        <div class="field"><label>Category</label><select id="ep-cat"><option>Grocery</option><option>Dairy</option><option>Chips</option><option>Snacks</option><option>Vegetables</option><option>Fruits</option><option>Juices</option><option>Beverages</option><option>Masala</option><option>Personal Care</option><option>Electronics</option><option>Other</option></select></div>
+      </div>
+      <div class="input-row">
+        <div class="field"><label>Price (₹)</label><input type="number" id="ep-price" min="0"></div>
+        <div class="field"><label>Stock</label><input type="number" id="ep-stock" min="0"></div>
+        <div class="field"><label>Low Stock Alert</label><input type="number" id="ep-low" min="0"></div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-edit-product')">Cancel</button>
+      <button class="btn btn-accent" onclick="updateProduct()">Update</button>
+    </div>
+  </div>
+</div>
+
+<!-- RECEIPT MODAL -->
+<div class="modal-overlay" id="modal-receipt">
+  <div class="modal" style="width:480px">
+    <div class="modal-title">🧾 Bill Receipt</div>
+    <div class="receipt" id="receipt-content"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-receipt')">Close</button>
+      <button class="btn btn-accent" onclick="printReceipt()">🖨 Print</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let products = [
+  // Grocery
+  { id:1,  name:'Tata Salt 1kg',           cat:'Grocery',       price:24,  stock:50,  low:10 },
+  { id:2,  name:'Fortune Refined Oil 1L',  cat:'Grocery',       price:140, stock:40,  low:10 },
+  { id:3,  name:'Aashirvaad Atta 5kg',     cat:'Grocery',       price:260, stock:30,  low:8  },
+  { id:4,  name:'India Gate Basmati 1kg',  cat:'Grocery',       price:120, stock:35,  low:10 },
+  { id:5,  name:'Toor Dal 1kg',            cat:'Grocery',       price:130, stock:25,  low:8  },
+  // Dairy
+  { id:6,  name:'Amul Butter 500g',        cat:'Dairy',         price:260, stock:20,  low:5  },
+  { id:7,  name:'Amul Milk 1L',            cat:'Dairy',         price:68,  stock:30,  low:10 },
+  { id:8,  name:'Amul Paneer 200g',        cat:'Dairy',         price:90,  stock:15,  low:5  },
+  { id:9,  name:'Amul Dahi 400g',          cat:'Dairy',         price:50,  stock:20,  low:6  },
+  { id:10, name:'Britannia Cheese 200g',   cat:'Dairy',         price:120, stock:12,  low:4  },
+  // Chips & Snacks
+  { id:11, name:'Lays Classic Salted 26g', cat:'Chips',         price:20,  stock:120, low:30 },
+  { id:12, name:'Lays Magic Masala 26g',   cat:'Chips',         price:20,  stock:100, low:30 },
+  { id:13, name:'Kurkure Masala Munch 90g',cat:'Chips',         price:30,  stock:80,  low:20 },
+  { id:14, name:'Bingo Mad Angles 130g',   cat:'Chips',         price:30,  stock:60,  low:15 },
+  { id:15, name:'Doritos Nacho Cheese 45g',cat:'Chips',         price:30,  stock:50,  low:15 },
+  { id:16, name:'Too Yumm Multigrain 35g', cat:'Chips',         price:20,  stock:70,  low:20 },
+  { id:17, name:'Haldiram Bhujia 200g',    cat:'Chips',         price:80,  stock:45,  low:12 },
+  { id:18, name:'Maggi Noodles 70g',       cat:'Snacks',        price:14,  stock:100, low:20 },
+  { id:19, name:'Parle-G 200g',            cat:'Snacks',        price:30,  stock:80,  low:20 },
+  { id:20, name:'Good Day Butter 200g',    cat:'Snacks',        price:40,  stock:60,  low:15 },
+  // Vegetables
+  { id:21, name:'Onion 1kg',               cat:'Vegetables',    price:40,  stock:30,  low:8  },
+  { id:22, name:'Tomato 500g',             cat:'Vegetables',    price:25,  stock:25,  low:8  },
+  { id:23, name:'Potato 1kg',              cat:'Vegetables',    price:35,  stock:40,  low:10 },
+  { id:24, name:'Capsicum 250g',           cat:'Vegetables',    price:30,  stock:20,  low:6  },
+  { id:25, name:'Carrot 500g',             cat:'Vegetables',    price:28,  stock:22,  low:6  },
+  { id:26, name:'Cauliflower 1pc',         cat:'Vegetables',    price:35,  stock:15,  low:5  },
+  { id:27, name:'Spinach 250g',            cat:'Vegetables',    price:20,  stock:18,  low:5  },
+  { id:28, name:'Green Chilli 100g',       cat:'Vegetables',    price:15,  stock:25,  low:8  },
+  // Fruits
+  { id:29, name:'Banana 1 dozen',          cat:'Fruits',        price:60,  stock:20,  low:5  },
+  { id:30, name:'Apple Shimla 1kg',        cat:'Fruits',        price:160, stock:15,  low:4  },
+  { id:31, name:'Grapes 500g',             cat:'Fruits',        price:70,  stock:12,  low:4  },
+  { id:32, name:'Mango Alphonso 1kg',      cat:'Fruits',        price:200, stock:10,  low:3  },
+  { id:33, name:'Orange 4pc',              cat:'Fruits',        price:60,  stock:18,  low:5  },
+  { id:34, name:'Pomegranate 2pc',         cat:'Fruits',        price:80,  stock:10,  low:3  },
+  { id:35, name:'Watermelon 1pc',          cat:'Fruits',        price:120, stock:8,   low:2  },
+  // Juices
+  { id:36, name:'Real Fruit Orange 1L',    cat:'Juices',        price:120, stock:30,  low:8  },
+  { id:37, name:'Real Fruit Mixed 200ml',  cat:'Juices',        price:25,  stock:60,  low:15 },
+  { id:38, name:'Tropicana Apple 1L',      cat:'Juices',        price:130, stock:25,  low:8  },
+  { id:39, name:'Tropicana Guava 200ml',   cat:'Juices',        price:25,  stock:50,  low:12 },
+  { id:40, name:'Paper Boat Aam Panna 250ml',cat:'Juices',      price:30,  stock:40,  low:10 },
+  { id:41, name:'Paper Boat Jaljeera 250ml',cat:'Juices',       price:30,  stock:35,  low:10 },
+  { id:42, name:'Raw Pressery Orange 250ml',cat:'Juices',       price:65,  stock:20,  low:6  },
+  // Beverages
+  { id:43, name:'Coca Cola 500ml',         cat:'Beverages',     price:40,  stock:60,  low:15 },
+  { id:44, name:'Pepsi 500ml',             cat:'Beverages',     price:40,  stock:55,  low:15 },
+  { id:45, name:'Sprite 500ml',            cat:'Beverages',     price:40,  stock:50,  low:15 },
+  { id:46, name:'Thums Up 2L',             cat:'Beverages',     price:90,  stock:30,  low:8  },
+  { id:47, name:'Maaza Mango 600ml',       cat:'Beverages',     price:45,  stock:40,  low:10 },
+  { id:48, name:'Red Bull 250ml',          cat:'Beverages',     price:125, stock:24,  low:6  },
+  { id:49, name:'Sting Energy 250ml',      cat:'Beverages',     price:40,  stock:40,  low:10 },
+  { id:50, name:'Nescafe Classic 200ml',   cat:'Beverages',     price:35,  stock:30,  low:8  },
+  { id:51, name:'Bru Instant Coffee 200ml',cat:'Beverages',     price:30,  stock:25,  low:8  },
+  { id:52, name:'Lipton Green Tea 10bags', cat:'Beverages',     price:80,  stock:20,  low:5  },
+  // Masalas
+  { id:53, name:'MDH Garam Masala 100g',   cat:'Masala',        price:95,  stock:30,  low:8  },
+  { id:54, name:'MDH Chana Masala 100g',   cat:'Masala',        price:90,  stock:28,  low:8  },
+  { id:55, name:'Everest Kitchen King 100g',cat:'Masala',       price:100, stock:25,  low:7  },
+  { id:56, name:'Everest Rajma Masala 50g',cat:'Masala',        price:60,  stock:22,  low:6  },
+  { id:57, name:'Catch Red Chilli Powder 200g',cat:'Masala',    price:75,  stock:30,  low:8  },
+  { id:58, name:'Catch Turmeric Powder 200g',cat:'Masala',      price:55,  stock:35,  low:10 },
+  { id:59, name:'MDH Coriander Powder 200g',cat:'Masala',       price:70,  stock:28,  low:8  },
+  { id:60, name:'Shan Biryani Masala 60g', cat:'Masala',        price:55,  stock:20,  low:6  },
+  // Personal Care
+  { id:61, name:'Head & Shoulders 180ml',  cat:'Personal Care', price:210, stock:25,  low:8  },
+  { id:62, name:'Lifebuoy Soap 100g',      cat:'Personal Care', price:38,  stock:5,   low:10 },
+  { id:63, name:'Colgate MaxFresh 200g',   cat:'Personal Care', price:115, stock:30,  low:8  },
+  { id:64, name:'Dettol Handwash 250ml',   cat:'Personal Care', price:115, stock:20,  low:6  },
+];
+let cart = [], transactions = [], payMethod = 'Cash', billCounter = 1001, todayRevenue = 0, todayBills = 0;
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.main').forEach(m => m.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  btn.classList.add('active');
+  if (name==='inventory') renderInventory();
+  if (name==='sales') renderSales();
+}
+
+function initBill() {
+  document.getElementById('bill-no').value = 'BILL-'+billCounter;
+  populateProductSelect();
+}
+
+function populateProductSelect() {
+  const sel = document.getElementById('prod-select');
+  sel.innerHTML = '<option value="">-- Choose Product --</option>';
+  products.forEach(p => {
+    if (p.stock > 0) sel.innerHTML += `<option value="${p.id}">${p.name} — ₹${p.price} (Stock: ${p.stock})</option>`;
+  });
+}
+
+function addToCart() {
+  const sid = parseInt(document.getElementById('prod-select').value);
+  const qty = parseInt(document.getElementById('prod-qty').value) || 1;
+  if (!sid) return showToast('Please select a product','error');
+  const prod = products.find(p => p.id===sid);
+  if (!prod) return;
+  if (qty > prod.stock) return showToast(`Only ${prod.stock} units available`,'error');
+  const existing = cart.find(c => c.id===sid);
+  if (existing) {
+    if (existing.qty+qty > prod.stock) return showToast(`Only ${prod.stock} units available`,'error');
+    existing.qty += qty;
+  } else {
+    cart.push({ id:prod.id, name:prod.name, price:prod.price, qty });
+  }
+  renderCart(); calcBill();
+  document.getElementById('prod-select').value='';
+  document.getElementById('prod-qty').value=1;
+}
+
+function renderCart() {
+  const tbody = document.getElementById('cart-body');
+  if (!cart.length) { tbody.innerHTML='<tr><td colspan="6"><div class="empty"><div class="icon">🛒</div>Cart is empty.</div></td></tr>'; return; }
+  tbody.innerHTML = cart.map((item,i) => `
+    <tr>
+      <td style="color:var(--muted)">${i+1}</td>
+      <td><strong>${item.name}</strong></td>
+      <td>₹${item.price.toFixed(2)}</td>
+      <td><div class="qty-ctrl"><button class="qty-btn" onclick="changeQty(${i},-1)">−</button><span>${item.qty}</span><button class="qty-btn" onclick="changeQty(${i},1)">+</button></div></td>
+      <td><strong>₹${(item.price*item.qty).toFixed(2)}</strong></td>
+      <td><button class="del-btn" onclick="removeItem(${i})">✕</button></td>
+    </tr>`).join('');
+}
+
+function changeQty(i,delta) {
+  const prod = products.find(p => p.id===cart[i].id);
+  cart[i].qty = Math.max(1, Math.min(prod.stock, cart[i].qty+delta));
+  renderCart(); calcBill();
+}
+
+function removeItem(i) { cart.splice(i,1); renderCart(); calcBill(); }
+
+function calcBill() {
+  const sub = cart.reduce((s,c) => s+c.price*c.qty, 0);
+  const dp = parseFloat(document.getElementById('disc-pct').value)||0;
+  const da = parseFloat(document.getElementById('disc-amt').value)||0;
+  const disc = Math.min(sub, (sub*dp/100)+da);
+  const tax = (sub-disc)*0.18;
+  const total = (sub-disc)+tax;
+  document.getElementById('s-subtotal').textContent='₹'+sub.toFixed(2);
+  document.getElementById('s-discount').textContent='-₹'+disc.toFixed(2);
+  document.getElementById('s-tax').textContent='₹'+tax.toFixed(2);
+  document.getElementById('s-total').textContent='₹'+total.toFixed(2);
+  calcChange();
+}
+
+function calcChange() {
+  const total = parseFloat(document.getElementById('s-total').textContent.replace('₹',''))||0;
+  const recv = parseFloat(document.getElementById('cash-received').value)||0;
+  document.getElementById('s-change').textContent='₹'+Math.max(0,recv-total).toFixed(2);
+}
+
+function selectPay(el,method) {
+  payMethod=method;
+  document.querySelectorAll('.pay-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('cash-section').style.display = method==='Cash'?'block':'none';
+}
+
+function generateBill() {
+  if (!cart.length) return showToast('Add at least one item!','error');
+  const custName = document.getElementById('cust-name').value||'Walk-in Customer';
+  const custPhone = document.getElementById('cust-phone').value||'—';
+  const billNo = document.getElementById('bill-no').value;
+  const sub = cart.reduce((s,c) => s+c.price*c.qty,0);
+  const dp = parseFloat(document.getElementById('disc-pct').value)||0;
+  const da = parseFloat(document.getElementById('disc-amt').value)||0;
+  const disc = Math.min(sub,(sub*dp/100)+da);
+  const tax=(sub-disc)*0.18;
+  const total=(sub-disc)+tax;
+  const now = new Date();
+  cart.forEach(item => { const p=products.find(x=>x.id===item.id); if(p) p.stock-=item.qty; });
+  transactions.unshift({ billNo, custName, custPhone, total, items:cart.length, date:now, payMethod });
+  todayRevenue+=total; todayBills++; updateHeader();
+  let html=`<div style="text-align:center;margin-bottom:8px"><strong style="font-family:'Syne',sans-serif;font-size:1.1rem">ShopBill Pro</strong><br><span style="color:#9585be;font-size:0.7rem">Tax Invoice</span></div>
+  <hr class="receipt-divider">
+  <div>Bill No: <strong>${billNo}</strong></div>
+  <div>Date: ${now.toLocaleDateString('en-IN')} ${now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}</div>
+  <div>Customer: <strong>${custName}</strong></div>
+  <div>Phone: ${custPhone}</div>
+  <div>Payment: ${payMethod}</div>
+  <hr class="receipt-divider">`;
+  cart.forEach((item,i) => { html+=`<div style="display:flex;justify-content:space-between"><span>${i+1}. ${item.name} x${item.qty}</span><span>₹${(item.price*item.qty).toFixed(2)}</span></div>`; });
+  html+=`<hr class="receipt-divider">
+  <div style="display:flex;justify-content:space-between"><span>Subtotal</span><span>₹${sub.toFixed(2)}</span></div>
+  <div style="display:flex;justify-content:space-between;color:#059669"><span>Discount</span><span>-₹${disc.toFixed(2)}</span></div>
+  <div style="display:flex;justify-content:space-between"><span>GST (18%)</span><span>₹${tax.toFixed(2)}</span></div>
+  <hr class="receipt-divider">
+  <div style="display:flex;justify-content:space-between;font-family:'Syne',sans-serif;font-weight:800;font-size:1.05rem;color:#7c3aed"><span>TOTAL</span><span>₹${total.toFixed(2)}</span></div>
+  <hr class="receipt-divider">
+  <div style="text-align:center;color:#9585be;font-size:0.72rem;margin-top:6px">Thank you for your purchase! 🙏</div>`;
+  document.getElementById('receipt-content').innerHTML=html;
+  openModal('modal-receipt');
+  billCounter++; clearCart(true); showToast('Bill generated successfully!');
+}
+
+function clearCart(silent=false) {
+  cart=[]; renderCart(); calcBill();
+  ['disc-pct','disc-amt','cash-received','cust-name','cust-phone'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('bill-no').value='BILL-'+billCounter;
+  populateProductSelect();
+  if(!silent) showToast('Cart cleared');
+}
+
+function renderInventory() {
+  const search = (document.getElementById('inv-search').value||'').toLowerCase();
+  const filtered = products.filter(p => p.name.toLowerCase().includes(search)||p.cat.toLowerCase().includes(search));
+  const tbody = document.getElementById('inv-body');
+  if (!filtered.length) { tbody.innerHTML='<tr><td colspan="7"><div class="empty"><div class="icon">📦</div>No products found.</div></td></tr>'; return; }
+  tbody.innerHTML = filtered.map(p => {
+    const st = p.stock===0?'<span class="badge badge-red">Out of Stock</span>':p.stock<=p.low?'<span class="badge badge-yellow">Low Stock</span>':'<span class="badge badge-green">In Stock</span>';
+    return `<tr>
+      <td style="color:var(--muted)">#${p.id}</td>
+      <td><strong>${p.name}</strong></td>
+      <td>${p.cat}</td>
+      <td>₹${p.price.toFixed(2)}</td>
+      <td><strong>${p.stock}</strong> <span style="color:var(--muted);font-size:0.7rem">(min:${p.low})</span></td>
+      <td>${st}</td>
+      <td>
+        <button class="btn btn-outline" style="padding:5px 10px;font-size:0.72rem" onclick="openEditProduct(${p.id})">Edit</button>
+        <button class="btn btn-red" style="padding:5px 10px;font-size:0.72rem;margin-left:4px" onclick="deleteProduct(${p.id})">Delete</button>
+      </td></tr>`;
+  }).join('');
+  updateHeader();
+}
+
+function saveProduct() {
+  const name=document.getElementById('np-name').value.trim();
+  const cat=document.getElementById('np-cat').value;
+  const price=parseFloat(document.getElementById('np-price').value);
+  const stock=parseInt(document.getElementById('np-stock').value);
+  const low=parseInt(document.getElementById('np-low').value)||10;
+  if (!name||isNaN(price)||isNaN(stock)) return showToast('Fill all required fields','error');
+  const id = products.length ? Math.max(...products.map(p=>p.id))+1 : 1;
+  products.push({id,name,cat,price,stock,low});
+  closeModal('modal-add-product');
+  ['np-name','np-price','np-stock','np-low'].forEach(id=>document.getElementById(id).value='');
+  renderInventory(); populateProductSelect(); showToast('Product added!');
+}
+
+function openEditProduct(id) {
+  const p=products.find(x=>x.id===id); if(!p) return;
+  document.getElementById('ep-id').value=p.id;
+  document.getElementById('ep-name').value=p.name;
+  document.getElementById('ep-cat').value=p.cat;
+  document.getElementById('ep-price').value=p.price;
+  document.getElementById('ep-stock').value=p.stock;
+  document.getElementById('ep-low').value=p.low;
+  openModal('modal-edit-product');
+}
+
+function updateProduct() {
+  const id=parseInt(document.getElementById('ep-id').value);
+  const p=products.find(x=>x.id===id); if(!p) return;
+  p.name=document.getElementById('ep-name').value;
+  p.cat=document.getElementById('ep-cat').value;
+  p.price=parseFloat(document.getElementById('ep-price').value);
+  p.stock=parseInt(document.getElementById('ep-stock').value);
+  p.low=parseInt(document.getElementById('ep-low').value);
+  closeModal('modal-edit-product'); renderInventory(); populateProductSelect(); showToast('Product updated!');
+}
+
+function deleteProduct(id) {
+  if (!confirm('Delete this product?')) return;
+  products=products.filter(p=>p.id!==id);
+  renderInventory(); populateProductSelect(); showToast('Product deleted');
+}
+
+function renderSales() {
+  const totalItems=transactions.reduce((s,t)=>s+t.items,0);
+  const avg=transactions.length?todayRevenue/transactions.length:0;
+  document.getElementById('rpt-revenue').textContent='₹'+todayRevenue.toFixed(0);
+  document.getElementById('rpt-bills').textContent=todayBills;
+  document.getElementById('rpt-items-sold').textContent=totalItems;
+  document.getElementById('rpt-avg').textContent='₹'+avg.toFixed(0);
+  const cats={};
+  products.forEach(p=>{ cats[p.cat]=(cats[p.cat]||0)+(p.stock*p.price); });
+  const vals=Object.values(cats), maxVal=Math.max(...vals,1);
+  document.getElementById('sales-chart').innerHTML=Object.entries(cats).map(([cat,val])=>`
+    <div class="bar-col">
+      <div class="bar" style="height:${Math.round((val/maxVal)*120)}px"><div class="tip">₹${val.toFixed(0)}</div></div>
+      <div class="bar-lbl">${cat.substring(0,6)}</div>
+    </div>`).join('');
+  const txnList=document.getElementById('txn-list');
+  if (!transactions.length) { txnList.innerHTML='<div class="empty"><div class="icon">📋</div>No transactions yet.</div>'; return; }
+  txnList.innerHTML=transactions.slice(0,8).map(t=>`
+    <div class="txn-row">
+      <div><div class="txn-id">${t.billNo} · ${t.payMethod}</div><div class="txn-name">${t.custName}</div></div>
+      <div style="text-align:right"><div class="txn-amount">₹${t.total.toFixed(2)}</div><div class="txn-date">${t.date.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})}</div></div>
+    </div>`).join('');
+}
+
+function updateHeader() {
+  document.getElementById('hdr-sales').textContent='₹'+todayRevenue.toFixed(0);
+  document.getElementById('hdr-bills').textContent=todayBills;
+  document.getElementById('hdr-items').textContent=products.length;
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function showToast(msg,type='') {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast'+(type?' '+type:'')+' show';
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+function printReceipt() {
+  const content=document.getElementById('receipt-content').innerHTML;
+  const win=window.open('','_blank','width=400,height=600');
+  win.document.write(`<html><head><title>Receipt</title><style>body{font-family:monospace;font-size:13px;padding:20px;line-height:1.8}hr{border:none;border-top:1px dashed #ccc;margin:8px 0}</style></head><body>${content}</body></html>`);
+  win.print();
+}
+
+document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('open'); }));
+initBill(); updateHeader();
+</script>
+</body>
+</html>
